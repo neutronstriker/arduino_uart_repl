@@ -46,4 +46,3 @@ Usage:
 Note: 1.CTRL+C followed by RETURN also stops stream
       2.All three types of stream can be active together and data will be in Comma Separated values
 
-updated
