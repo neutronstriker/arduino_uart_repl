@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "DDAT_Platform", "DDAT_Platform\DDAT_Platform.cppproj", "{7D06A3B8-74A0-40BC-8FA4-1DCA0E192ECB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7D06A3B8-74A0-40BC-8FA4-1DCA0E192ECB}.Debug|AVR.ActiveCfg = Debug|AVR
+		{7D06A3B8-74A0-40BC-8FA4-1DCA0E192ECB}.Debug|AVR.Build.0 = Debug|AVR
+		{7D06A3B8-74A0-40BC-8FA4-1DCA0E192ECB}.Release|AVR.ActiveCfg = Release|AVR
+		{7D06A3B8-74A0-40BC-8FA4-1DCA0E192ECB}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

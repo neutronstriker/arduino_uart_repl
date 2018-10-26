@@ -1,0 +1,124 @@
+Date:09-04-2016
+I just added what I felt the most required feature till date to arduino serial lib, which is the auto echo.
+
+But during that when I saw how the lib managed the data using interrupts it left me wondering how much time is 
+the whole interrupt globally disabled during servicing this ISR as a result the millis() and micros() would be
+so non-dependable in a program that continuously uses serial port. We may need to verify and resolve this issue.
+
+Date:10-04-2016
+I found that time taken to process the ISR is 3.5uS with my extra mods and 3uS without my MODs. We have a window of 17.36uS 
+between each character receive for a baud rate of 57600 so we are good for this and for timer it is around 1000uS so we are
+good.
+
+But if I send a burst write at max speed with ATE enabled then it takes 20uS (max) if CR detected, and 11.5uS (min) for any other
+character detected.	But if we send a burst write with ATE enabled it eventually makes it to go mad and it hangs.
+
+So we should not enable ATE when we are using it via script, it is only for direct keying. If such feature is required then we
+will have to also add AT ECHO disable CMD. 
+
+Mainly the bluetooth driver/windows gets mad by this burst of characters (looping back) and inability to deal with it properly.
+
+Date:14-05-2016
+
+example cmds:
+
+i2cwrite -s50 -r0 -n4 -h32,34,56,89
+i2cread -s3c -r0 -n6
+
+i2cread -s48 -n1 -r0
+i2cread -s48 -r0 -n8
+
+i2cread -s50 -r0 -na
+
+i2cwrite -s50 -r0 -n4 -hfe
+
+i2cping -s3c
+
+i2cscan
+
+Things yet to be done apart from all the features that I recently added like snoop, remove white space, i2c cmds are
+adding an ability for the i2c cmd to detect whether the type of given data is hex or decimal either by appending 0x infront
+and detecting or by using simple flag passed as a parameter like -t0 = hex -t1 = decimal.
+
+Then I would like to add a lcd write feature from serial. this should have function like setCursor, setSize, clearDisplay and print
+basically export these things to be accessible via uart. But this might conflict with already present cmds which directly access LCD.
+Like seth2 will seth digital pin 2 high and print the same on LCD. But if we try to read something and print something else on LCD.
+It could be problem especially while processing stream data and printing lcd. We may need some provision for this. But this LCD thing
+is not so important.
+
+Then I would like to make backspace detection possible by removing on backspace old data but for this I may need to implement some
+custom ring_buffer which will also have a mechanism to remove from back also along with remove from front.
+
+May be also we need to check on the case sensitivity of cmds or only for specific areas like i2c data part we can use tolower or upper
+before checking data values. Because it would be huge overhead to convert the whole 64byte buffer to lower case everytime.
+
+Next I want to check why that snoop thing still has trouble. Some ideas are Trying 5V logic level on FTDI side, and also we need to check
+the series resistor present on the Uart pins of nano.(open item).
+
+And finally I would like to improve my i2c_write, i2c_read cmds response like timeout, error etc. And also solve the bus hang issue
+by using methods like reset on bus hang. And this hang issue happens especially if coding is not proper, so we can solve this
+even without using timeout, because only if a device stretches the clk then bus will stop otherwise we can always check the status after
+9th bit (ACK/NACK) and check the status code. In one situation there might be a complete BUS hang when any one device in the bus has 
+not been grounded i.e. gnd pin left open.
+
+//I also found an interesting thing which is that I2C bus doesn't hang because of my code
+									//if there are pullups present. Previously I used to think if there are no devices and I
+									//try to write to a device then it will hang the bus but actually my code is not bad.
+									//(I still need to check on the timeout issue though). If pullups are present then it works
+									//out fine most of the time.
+
+Date:14-05-2016
+Added a command for case sensitivity disabling.
+Added ability to detect decimal aswell as hex data in i2c functions
+
+ex:
+i2cwrite -s140 -n2 -r0 -h123,32 -tdec //default action if -t parameter is not given is HEX. 
+
+Date:19-05-2016
+Added Backspace detection mechanism. Read more about it in config.h
+
+Date:19-06-2016
+I want to modify getparam to new version where it will search for a given constant string like "-v" and then return the
+parameter specified after it. And in the function argument we will place the the type of response expected like it is
+string or number. If number then is it hex or dec. and will also return the pointer address and if required we will mention
+the length of switch string or we can strlen and find it.
+
+Date:15-08-2016
+One update we can do is that we can add a [] after the -h parameter where data will be placed for example
+i2cwrite -n2 -s50 -r0 -h[23,43], or i2cwrite -n2 -h[23,43] -r0 -s50 so now we can interpret more tightly and accurately what data has
+come in.
+
+Next update I want to add is 
+spi_soft_config -p[<mosi>, <miso>, <sck>, <ss>] -s<active_high>:<active_low> -c<clock_freq>
+spi_soft_cs_assert
+spi_soft_write -b[<byte1>,<byte2>,<byte3>,<byte4>,<byte5>,<byte6>,<byte7>,<byte8>] ; max 8 bytes in one CMD.
+spi_soft_cs_deassert
+spi_soft_read -n <number_of_bytes> ; max 8 bytes in one CMD.
+
+and
+
+spi_en
+spi_config -p<ss_pin> -x<clock_divider_power_of_2> -m<mode:0:1:2:3> -o<bit_order:m:l> | eg:spi_config -p4 -x3 -m0 -oM 
+spi_cs_low
+spi_write -n<number_of_bytes> -h[<byte1>,<byte2>,<byte3>,<byte4>,<byte5>,<byte6>,<byte7>,<byte8>] ; max 8 bytes in one CMD.
+{example spi_write -n2 -b23,4A [-t[HEX:DEC]]}
+spi_cs_high
+spi_read -n <number_of_bytes> ; max 8 bytes in one CMD.
+{example spi_read -n2 [-t[HEX:DEC]]}
+spi_dis
+
+Dt:21-08-2016
+we need to add another function to SPI module as mentioned below:
+spi_transfer -n<number_of_bytes> -h[<byte1>,<byte2>,<byte3>,<byte4>,<byte5>,<byte6>,<byte7>,<byte8>] ; max 8 bytes in one CMD.
+this is same as write but it also outputs to the uart the SPI data received in each transfer.
+
+Also we need to fix the getParam algorithm which was thought to be fixed that while writing -h0a or -h01 it was not working properly
+so we started to detect ',' but if only 1 byte is given that doesn't work so we will implement the [] and ',' combination 
+and make it more robust for spi and i2c.
+
+Dt:12-01-2017
+Added reset command "reset" which resets the DDAT program using WDT, had to update the bootloader for it to work properly.
+
+Dt:27-10-2018
+Added pwmv and pwmf commands, now it is possible to set pwm value of a pin to a certain value and also it is possible to change
+the default PWM freq by changing the divisor.

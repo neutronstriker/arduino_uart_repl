@@ -1,0 +1,23 @@
+Debug(D) Data Aquisition(DAQ->D) Automation(A) Test(T) platform
+
+capacitor between some pin of ch340g and rst removed, because it was may be of higher capacitance than 1uF
+that i put in between state of hc-05 and rst. 
+
+rst Switch removed
+
+rx tx leds removed
+
+rx tx series leds moved to the leds solder pads.
+
+then tx series resistor of 1k was replaced by 560ohm because it was not working properly.
+
+now the serial port of usb can communicate but can't program any more.
+
+only bluetooth can program
+
+bluetooh module has no connection to en-pin
+
+so usb can be used as power socket mostly, its serial adapter can be used as a readonly serial port also, since it can print 
+messages but its TX line is overridden by bluetooths so we can send any data through it.
+
+So in some cases the Usb to Uart can also be utilised.
